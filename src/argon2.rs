@@ -1,11 +1,17 @@
-extern crate blake2_rfc;
+use std::{
+    error::Error,
+    fmt,
+    mem::transmute,
+};
 
-use std::{fmt, mem};
-use std::error::Error;
-use self::blake2_rfc::blake2b::Blake2b;
-use octword::u64x2;
-use block::{ARGON2_BLOCK_BYTES, Block, Matrix};
-use workers::Workers;
+use blake2_rfc::blake2b::Blake2b;
+
+use crate::{
+    block::{ARGON2_BLOCK_BYTES, Block, Matrix},
+    octword::u64x2,
+    workers::Workers,
+};
+
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub enum Variant {
@@ -31,14 +37,15 @@ fn split_u64(n: u64) -> (u32, u32) {
     ((n & 0xffffffff) as u32, (n >> 32) as u32)
 }
 
-fn as32le(k: u32) -> [u8; 4] { unsafe { mem::transmute(k.to_le()) } }
+// XXX
+fn as32le(k: u32) -> [u8; 4] { unsafe { transmute(k.to_le()) } }
 
 fn len32(t: &[u8]) -> [u8; 4] { as32le(t.len() as u32) }
 
 macro_rules! b2hash {
     ($($bytes: expr),*) => {
         {
-            let mut out: [u8; DEF_B2HASH_LEN] = unsafe { mem::uninitialized() };
+            let mut out: [u8; DEF_B2HASH_LEN] = [0; DEF_B2HASH_LEN];
             b2hash!(&mut out; $($bytes),*);
             out
         }
@@ -395,7 +402,7 @@ impl Gen2i {
     fn new(start_at: usize, pass: u32, lane: u32, slice: u32, totblocks: u32,
            totpasses: u32)
            -> Gen2i {
-        use block::zero;
+        use crate::block::zero;
 
         let mut rv = Gen2i { arg: zero(), pseudos: zero(), idx: start_at };
         let args = [(pass, lane), (slice, totblocks),
@@ -442,7 +449,7 @@ fn g(dest: &mut Block, lhs: &Block, rhs: &Block) {
 // Identical to `g`, except that instead of overwriting the old block with the
 // new one, they are xor-ed together.
 fn g_xor(dest: &mut Block, lhs: &Block, rhs: &Block) {
-    let mut tmp: Block = unsafe { mem::uninitialized() };
+    let mut tmp: Block = Block::zeroed();
     let lr = lhs.iter().zip(rhs.iter());
     for ((d, t), (l, r)) in dest.iter_mut().zip(tmp.iter_mut()).zip(lr) {
         *t = *l ^ *r;
@@ -539,12 +546,17 @@ fn p_col(col: usize, b: &mut Block) {
 
 #[cfg(test)]
 mod tests {
-    use std::fs::File;
-    use std::io::Read;
-    use super::Argon2;
-    use super::{Variant, Version};
-    use block;
-    use std::fmt::Write;
+    use std::{
+        fmt::Write,
+        fs::File,
+        io::Read,
+    };
+
+    use crate::{
+        argon2::{Argon2, Variant, Version},
+        block,
+    };
+
 
     // from genkat.c
     const TEST_OUTLEN: usize = 32;

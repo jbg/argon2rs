@@ -15,7 +15,7 @@ fn that_cli_tool(msg: &[u8], salt: &[u8], passes: u32, lanes: u32, logkib: u32)
                 .ok()
                 .unwrap();
     let mut s = [0; CLI_TOOL_SALT_LEN];
-    for (&v, mut k) in salt.iter().zip(s.iter_mut()) {
+    for (&v, k) in salt.iter().zip(s.iter_mut()) {
         *k = v;
     }
 

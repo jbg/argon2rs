@@ -1,6 +1,6 @@
 [package]
 name = "argon2rs"
-version = "0.2.5"
+version = "0.3.0"
 authors = ["bryant <bryant@defrag.in>"]
 repository = "https://github.com/bryant/argon2rs"
 documentation = "http://bryant.github.io/argon2rs/argon2rs/"
@@ -8,6 +8,7 @@ description = "The pure Rust password hashing library that runs on Argon2."
 readme = "README.md"
 keywords = ["crypto", "argon2", "argon2i", "argon2d", "hash"]
 license = "MIT"
+edition = "2018"
 
 [features]
 default = ["threaded"]
@@ -16,6 +17,6 @@ bench_ref = ["cargon"]
 threaded = ["scoped_threadpool"]
 
 [dependencies]
-blake2-rfc = "0.2.16"
-scoped_threadpool = { version = "0.1.7", optional = true }
+blake2-rfc = "0.2.18"
+scoped_threadpool = { version = "0.1.9", optional = true }
 cargon = { path = "benches/cargon", version = "0.0.1", optional = true }

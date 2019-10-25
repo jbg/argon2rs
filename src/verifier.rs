@@ -1,9 +1,14 @@
 /// The main export here is `Encoded`. See `examples/verify.rs` for usage
 /// examples.
 
-use std::{fmt, str};
-use std::error::Error;
-use argon2::{Argon2, ParamErr, Variant, Version, defaults};
+use std::{
+    error::Error,
+    fmt,
+    str,
+};
+
+use crate::argon2::{Argon2, ParamErr, Variant, Version, defaults};
+
 
 macro_rules! maybe {
     ($e: expr) => {
@@ -239,7 +244,7 @@ impl Encoded {
 
         try_unit!(p.expect(b"$argon2"));
 
-        let variant = match try!(p.one_of(b"di")) {
+        let variant = match p.one_of(b"di")? {
             v if v == 'd' as u8 => Variant::Argon2d,
             v if v == 'i' as u8 => Variant::Argon2i,
             _ => unreachable!(),
@@ -252,32 +257,32 @@ impl Encoded {
             // v0x13.
             Err(_) => Version::_0x10,
             Ok(()) => {
-                let vers = try!(p.read_version());
+                let vers = p.read_version()?;
                 try_unit!(p.expect(b","));
                 vers
             }
         };
         try_unit!(p.expect(b"m="));
-        let kib = try!(p.read_u32());
+        let kib = p.read_u32()?;
         try_unit!(p.expect(b",t="));
-        let passes = try!(p.read_u32());
+        let passes = p.read_u32()?;
         try_unit!(p.expect(b",p="));
-        let lanes = try!(p.read_u32());
+        let lanes = p.read_u32()?;
 
         let key = match p.expect(b",keyid=") {
             Err(_) => vec![],
-            Ok(()) => try!(p.decode64_till(Some(b","))),
+            Ok(()) => p.decode64_till(Some(b","))?,
         };
 
         let data = match p.expect(b",data=") {
-            Ok(()) => try!(p.decode64_till(Some(b"$"))),
+            Ok(()) => p.decode64_till(Some(b"$"))?,
             Err(_) => vec![],
         };
 
         try_unit!(p.expect(b"$"));
-        let salt = try!(p.decode64_till(Some(b"$")));
+        let salt = p.decode64_till(Some(b"$"))?;
         try_unit!(p.expect(b"$"));
-        let hash = try!(p.decode64_till(None));
+        let hash = p.decode64_till(None)?;
         Ok((variant, vers, kib, passes, lanes, key, data, salt, hash))
     }
 
@@ -441,7 +446,8 @@ mod test {
     #[test]
     fn bad_encoded() {
         use super::DecodeError::*;
-        use argon2::ParamErr::*;
+        use crate::argon2::ParamErr::*;
+
         let cases: &[(&'static [u8], super::DecodeError)] =
             &[(b"$argon2y$v=19,m=4096", ParseError(7)),
               (b"$argon2i$v=19,m=-2,t=-4,p=-4$aaaaaaaa$ffffff", ParseError(16)),

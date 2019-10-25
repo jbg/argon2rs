@@ -1,10 +1,9 @@
 #[cfg(feature = "threaded")]
-pub use self::threadpool::Workers;
+pub use threadpool::Workers;
 
 #[cfg(feature = "threaded")]
 mod threadpool {
-    extern crate scoped_threadpool;
-    use block::Matrix;
+    use crate::block::Matrix;
 
     pub struct Workers(u32, Option<scoped_threadpool::Pool>);
 
@@ -38,11 +37,11 @@ mod threadpool {
 }
 
 #[cfg(not(feature = "threaded"))]
-pub use self::threaded::Workers;
+pub use threaded::Workers;
 
 #[cfg(not(feature = "threaded"))]
 mod threaded {
-    use block::Matrix;
+    use crate::block::Matrix;
 
     /// Holds the number of lanes.
     pub struct Workers(u32);

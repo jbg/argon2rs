@@ -1,7 +1,11 @@
-use octword::u64x2;
-use std::mem;
-use std::ops::{BitXorAssign, Index, IndexMut};
-use std::slice::{Iter, IterMut};
+use std::{
+    mem,
+    ops::{BitXorAssign, Index, IndexMut},
+    slice::{Iter, IterMut},
+};
+
+use crate::octword::u64x2;
+
 
 pub const ARGON2_BLOCK_BYTES: usize = 1024;
 
@@ -22,6 +26,8 @@ impl Clone for Block {
 }
 
 impl Block {
+    pub fn zeroed() -> Self { Block([u64x2(0, 0); per_kib!(u64x2)]) }
+
     pub fn iter_mut(&mut self) -> IterMut<u64x2> { self.0.iter_mut() }
 
     pub fn iter(&self) -> Iter<u64x2> { self.0.iter() }
@@ -141,6 +147,7 @@ impl Matrix {
         rv
     }
 
+    #[cfg(test)]
     pub fn iter(&self) -> Iter<Block> { self.blocks.iter() }
 }
 
